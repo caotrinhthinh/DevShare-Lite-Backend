@@ -8,7 +8,7 @@ import { CommentModule } from './comment/comment.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true,
+      isGlobal: true, // Tự động inject ConfigService ở bất kì đâu
     }),
 
     MongooseModule.forRootAsync({
