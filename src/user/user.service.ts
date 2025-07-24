@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { User, UserDocument } from './schemas/user.schemas';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
@@ -19,21 +19,33 @@ export class UserService {
     return this.userModel.findById(id).exec();
   }
 
-  findAll() {
-    return `This action returns all user`;
+  async findByEmailVerificationToken(
+    code: string,
+  ): Promise<UserDocument | null> {
+    return this.userModel.findOne({ emailVerificationCode: code }).exec();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async update(id: string, updateData: any): Promise<UserDocument | null> {
+    return (
+      this.userModel
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        .findByIdAndUpdate(id, updateData, { new: true })
+        .exec()
+    );
   }
 
-  async update(id: string, updateData: any) {
-    return this.userModel
-      .findByIdAndUpdate(id, updateData, { new: true })
+  async getProfile(id: string): Promise<UserDocument> {
+    const user = await this.userModel
+      .findById(id)
+      .select(
+        '-password -emailVerificationCode -passwordResetCode -passwordResetExpires',
+      )
       .exec();
-  }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
   }
 }

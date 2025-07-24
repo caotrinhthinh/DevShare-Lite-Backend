@@ -1,5 +1,6 @@
 import { RegisterDto } from './dto/register.dto';
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
@@ -9,12 +10,16 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { randomBytes } from 'crypto';
 import { SanitizedUser } from '../user/interface/user.interface';
+import { MailerService } from '@nestjs-modules/mailer';
+import { join } from 'path';
+import { readFileSync } from 'fs';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
+    private mailerService: MailerService,
   ) {}
 
   async validateUser(
@@ -28,11 +33,7 @@ export class AuthService {
     }
 
     const isPasswordValid = await bcrypt.compare(pass, user.password);
-    // if (!isPasswordValid || !user.isEmailVerified) {
-    //   return null;
-    // }
-
-    if (!isPasswordValid) {
+    if (!isPasswordValid || !user.isEmailVerified) {
       return null;
     }
 
@@ -58,18 +59,22 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Generate email verification token
-    const emailVerificationToken = randomBytes(32).toString('hex');
+    const emailVerificationCode = randomBytes(32).toString('hex');
 
     // Create user
     const user = await this.userService.create({
       email,
       password: hashedPassword,
       name,
-      emailVerificationToken,
+      emailVerificationCode,
     });
 
     // Send verification email
-    // await this.sendVerificationEmail(user.email, emailVerificationToken);
+    await this.sendVerificationEmail(
+      user.email,
+      user.name,
+      emailVerificationCode,
+    );
 
     return {
       message:
@@ -85,5 +90,49 @@ export class AuthService {
       access_token: this.jwtService.sign(payload),
       user,
     };
+  }
+
+  async verifyEmail(code: string) {
+    const user = await this.userService.findByEmailVerificationToken(code);
+    if (!user) {
+      throw new BadRequestException('Invalid verification token');
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    await this.userService.update(user.id, {
+      isEmailVerified: true,
+      emailVerificationCode: null,
+    });
+
+    return { message: 'Email verified successfully' };
+  }
+
+  // Send verification email
+  private async sendVerificationEmail(
+    email: string,
+    name: string,
+    code: string,
+  ) {
+    const verificationUrl = `http://localhost:3000/api/auth/verify-email?code=${code}`;
+
+    const templatePath = join(
+      __dirname,
+      '..',
+      '..',
+      'templates',
+      'verify-email.html',
+    );
+
+    const htmlTemplate = readFileSync(templatePath, 'utf8');
+
+    const content = htmlTemplate
+      .replace('{{name}}', name)
+      .replace('{{activationCode}}', verificationUrl);
+
+    await this.mailerService.sendMail({
+      to: email,
+      subject: 'Verify Your Email - DevShare Lite',
+      html: content,
+    });
   }
 }
