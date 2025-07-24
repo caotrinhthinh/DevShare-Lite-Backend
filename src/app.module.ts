@@ -4,6 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UserModule } from './user/user.module';
 import { PostModule } from './post/post.module';
 import { CommentModule } from './comment/comment.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -20,9 +21,8 @@ import { CommentModule } from './comment/comment.module';
     }),
 
     UserModule,
-
+    AuthModule,
     PostModule,
-
     CommentModule,
   ],
 })

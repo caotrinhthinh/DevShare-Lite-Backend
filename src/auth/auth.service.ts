@@ -8,6 +8,7 @@ import { UserService } from '../user/user.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { randomBytes } from 'crypto';
+import { SanitizedUser } from '../user/interface/user.interface';
 
 @Injectable()
 export class AuthService {
@@ -16,22 +17,32 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(username: string, pass: string): Promise<any> {
-    const user = await this.userService.findByEmail(username);
+  async validateUser(
+    email: string,
+    pass: string,
+  ): Promise<SanitizedUser | null> {
+    const user = await this.userService.findByEmail(email);
 
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
 
     const isPasswordValid = await bcrypt.compare(pass, user.password);
-    if (!isPasswordValid || !user.isEmailVerified) {
+    // if (!isPasswordValid || !user.isEmailVerified) {
+    //   return null;
+    // }
+
+    if (!isPasswordValid) {
       return null;
     }
 
     // Trả về user object (bỏ mật khẩu)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...result } = user.toObject();
-    return result;
+    const { _id, password, ...result } = user.toObject();
+    return {
+      id: _id.toString(),
+      ...result,
+    };
   }
 
   async register(registerDto: RegisterDto) {
@@ -67,17 +78,12 @@ export class AuthService {
     };
   }
 
-  login(user: any) {
-    const userId = user._id.toString();
+  login(user: SanitizedUser) {
     // Generate JWT token
-    const payload = { email: user.email, sub: userId };
+    const payload = { email: user.email, sub: user.id };
     return {
       access_token: this.jwtService.sign(payload),
-      user: {
-        id: user._id || user.id,
-        email: user.email,
-        name: user.name,
-      },
+      user,
     };
   }
 }

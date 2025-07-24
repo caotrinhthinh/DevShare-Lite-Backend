@@ -10,12 +10,12 @@ export class AuthController {
 
   @Post('register')
   register(@Body() registerDto: RegisterDto) {
-    return this.authService.login(registerDto);
+    return this.authService.register(registerDto);
   }
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
   login(@Request() req) {
-    return this.authService.login(req.user);
+    return this.authService.login(req.user); // req.user được inject từ Local.strategy.validate()
   }
 }
