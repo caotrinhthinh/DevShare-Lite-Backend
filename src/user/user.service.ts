@@ -1,7 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { User, UserDocument } from './schemas/user.schemas';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
+import { ChangePasswordDto } from 'src/auth/dto/change-password.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -45,6 +51,22 @@ export class UserService {
         .findByIdAndUpdate(id, updateData, { new: true })
         .exec()
     );
+  }
+
+  async changePassword(userId: string, changePasswordDto: ChangePasswordDto) {
+    const { currentPassword, newPassword } = changePasswordDto;
+    const user = await this.findById(userId);
+    if (!user) throw new BadRequestException('User not found');
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch)
+      throw new BadRequestException('Current password is incorrect');
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    await this.update(user.id, { password: hashed });
+
+    return { message: 'Password changed successfully' };
   }
 
   async getProfile(id: string): Promise<UserDocument> {

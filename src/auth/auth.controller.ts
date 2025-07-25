@@ -15,9 +15,6 @@ import { RegisterDto } from './dto/register.dto';
 import { SanitizedUser } from '../user/interface/user.interface';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
-import { JwtAuthGuard } from '../common/passport/jwt-auth.guard';
-import { ChangePasswordDto } from './dto/change-password.dto';
-import { GetUser } from '../common/decorators';
 import { VerifyResetCodeDto } from './dto/verify-reset-code.dto';
 
 @Controller('auth')
@@ -57,15 +54,5 @@ export class AuthController {
   @Post('reset-password')
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return this.authService.resetPassword(resetPasswordDto);
-  }
-
-  // Đổi mật khẩu
-  @Post('change-password')
-  @UseGuards(JwtAuthGuard)
-  async changePassword(
-    @GetUser('_id') userId: string,
-    @Body() changePasswordDto: ChangePasswordDto,
-  ) {
-    return this.authService.changePassword(userId, changePasswordDto);
   }
 }
