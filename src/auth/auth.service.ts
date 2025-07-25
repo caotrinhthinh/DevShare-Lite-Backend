@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -17,7 +17,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { join } from 'path';
 import { readFileSync } from 'fs';
 import { v4 as uuid } from 'uuid';
-import { VerifyResetCodeDto } from './dto/verify-resert-code.dto';
+import { VerifyResetCodeDto } from './dto/verify-reset-code.dto';
 
 @Injectable()
 export class AuthService {
@@ -172,7 +172,6 @@ export class AuthService {
       throw new BadRequestException('Invalid or expired code');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     const token = uuid();
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     await this.userService.update(user.id, {
@@ -204,6 +203,22 @@ export class AuthService {
     });
 
     return { message: 'Password has been reset successfully' };
+  }
+
+  async changePassword(userId: string, changePasswordDto: ChangePasswordDto) {
+    const { currentPassword, newPassword } = changePasswordDto;
+    const user = await this.userService.findById(userId);
+    if (!user) throw new BadRequestException('User not found');
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch)
+      throw new BadRequestException('Current password is incorrect');
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    await this.userService.update(user.id, { password: hashed });
+
+    return { message: 'Password changed successfully' };
   }
 
   // Send verification email

@@ -10,12 +10,15 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
-import { LocalAuthGuard } from './passport/local-auth.guard';
+import { LocalAuthGuard } from '../common/passport/local-auth.guard';
 import { RegisterDto } from './dto/register.dto';
-import { SanitizedUser } from 'src/user/interface/user.interface';
+import { SanitizedUser } from '../user/interface/user.interface';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
-import { VerifyResetCodeDto } from './dto/verify-resert-code.dto';
+import { JwtAuthGuard } from '../common/passport/jwt-auth.guard';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { GetUser } from '../common/decorators';
+import { VerifyResetCodeDto } from './dto/verify-reset-code.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -54,5 +57,15 @@ export class AuthController {
   @Post('reset-password')
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return this.authService.resetPassword(resetPasswordDto);
+  }
+
+  // Đổi mật khẩu
+  @Post('change-password')
+  @UseGuards(JwtAuthGuard)
+  async changePassword(
+    @GetUser('_id') userId: string,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    return this.authService.changePassword(userId, changePasswordDto);
   }
 }
