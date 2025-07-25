@@ -21,7 +21,10 @@ export class User {
   emailVerificationCode: string;
 
   @Prop()
-  passwordResetCode: string;
+  passwordResetCode: string; // Lấy code xác thực được gửi qua mail
+
+  @Prop()
+  passwordResetToken: string; // Để xác thực sau khi nhập code vào để đổi mật khẩu
 
   @Prop()
   passwordResetExpires: Date;

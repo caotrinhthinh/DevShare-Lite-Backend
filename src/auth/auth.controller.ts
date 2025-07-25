@@ -13,6 +13,9 @@ import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './passport/local-auth.guard';
 import { RegisterDto } from './dto/register.dto';
 import { SanitizedUser } from 'src/user/interface/user.interface';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { VerifyResetCodeDto } from './dto/verify-resert-code.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -31,29 +34,25 @@ export class AuthController {
 
   @Get('verify-email')
   async verifyEmail(@Query('code') code: string, @Res() res: Response) {
-    try {
-      await this.authService.verifyEmail(code);
+    const html = await this.authService.verifyEmail(code);
+    return res.send(html);
+  }
 
-      return res.send(`
-        <html>
-          <head><title>Verification Success</title></head>
-          <body style="font-family: sans-serif; text-align: center; padding-top: 50px;">
-            <h1>Email verified successfully 🎉</h1>
-            <p>You can now log in to your account.</p>
-          </body>
-        </html>
-      `);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
-      return res.send(`
-        <html>
-          <head><title>Verification Failed</title></head>
-          <body style="font-family: sans-serif; text-align: center; padding-top: 50px; color: red;">
-            <h1>Verification failed ❌</h1>
-            <p>Invalid or expired verification link.</p>
-          </body>
-        </html>
-      `);
-    }
+  // Gửi mã code qua email khi người dùng quên mật khẩu
+  @Post('forgot-password')
+  async forgotPassword(@Body() forgotPassword: ForgotPasswordDto) {
+    return this.authService.forgotPassword(forgotPassword);
+  }
+
+  // Xác thực code => trả resetToken
+  @Post('verify-reset-code')
+  async verifyResetCode(@Body() verifyResetCode: VerifyResetCodeDto) {
+    return this.authService.verifyResetCode(verifyResetCode);
+  }
+
+  // Đặt lại mật khẩu mới
+  @Post('reset-password')
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    return this.authService.resetPassword(resetPasswordDto);
   }
 }

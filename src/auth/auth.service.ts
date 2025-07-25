@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { RegisterDto } from './dto/register.dto';
 import {
   BadRequestException,
@@ -13,6 +16,8 @@ import { SanitizedUser } from '../user/interface/user.interface';
 import { MailerService } from '@nestjs-modules/mailer';
 import { join } from 'path';
 import { readFileSync } from 'fs';
+import { v4 as uuid } from 'uuid';
+import { VerifyResetCodeDto } from './dto/verify-resert-code.dto';
 
 @Injectable()
 export class AuthService {
@@ -93,18 +98,112 @@ export class AuthService {
   }
 
   async verifyEmail(code: string) {
-    const user = await this.userService.findByEmailVerificationToken(code);
-    if (!user) {
-      throw new BadRequestException('Invalid verification token');
+    try {
+      const user = await this.userService.findByEmailVerificationCode(code);
+      if (!user) {
+        throw new BadRequestException('Invalid verification token');
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      await this.userService.update(user.id, {
+        isEmailVerified: true,
+        emailVerificationCode: null,
+      });
+
+      return `
+      <html>
+        <head><title>Verification Success</title></head>
+        <body style="font-family: sans-serif; text-align: center; padding-top: 50px;">
+          <h1>Email verified successfully 🎉</h1>
+          <p>You can now log in to your account.</p>
+        </body>
+      </html>
+    `;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      return `
+      <html>
+        <head><title>Verification Failed</title></head>
+        <body style="font-family: sans-serif; text-align: center; padding-top: 50px; color: red;">
+          <h1>Verification failed ❌</h1>
+          <p>Invalid or expired verification link.</p>
+        </body>
+      </html>
+    `;
     }
+  }
+
+  async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
+    const { email } = forgotPasswordDto;
+
+    const user = await this.userService.findByEmail(email);
+    if (!user) {
+      return {
+        message:
+          'If your email is registered, you will receive a password reset link',
+      };
+    }
+
+    // Generate reset token
+    const code = Math.floor(100000 + Math.random() * 900000).toString(); // "6 chữ số"
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    await this.userService.update(user.id, {
+      passwordResetCode: code,
+      passwordResetExpires: new Date(Date.now() + 10 * 60 * 1000), // 10 phút
+    });
+
+    // Send password reset email
+    await this.sendPasswordResetEmail(user.email, user.name, code);
+
+    return {
+      message:
+        'If your email is registered, you will receive a password reset link',
+    };
+  }
+
+  async verifyResetCode(verifyResetCode: VerifyResetCodeDto) {
+    const { code } = verifyResetCode;
+    const user = await this.userService.findByPasswordResetCode(code);
+    if (
+      !user ||
+      !user.passwordResetExpires ||
+      user.passwordResetExpires < new Date()
+    ) {
+      throw new BadRequestException('Invalid or expired code');
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    const token = uuid();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    await this.userService.update(user.id, {
+      passwordResetToken: token,
+      passwordResetCode: null,
+      passwordResetExpires: null,
+    });
+
+    return { message: 'Code verified', token };
+  }
+
+  async resetPassword(resetPasswordDto: ResetPasswordDto) {
+    const { token, newPassword } = resetPasswordDto;
+
+    const user = await this.userService.findByPasswordResetToken(token);
+
+    if (!user) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     await this.userService.update(user.id, {
-      isEmailVerified: true,
-      emailVerificationCode: null,
+      password: hashedPassword,
+      passwordResetCode: null,
+      passwordResetExpires: null,
     });
 
-    return { message: 'Email verified successfully' };
+    return { message: 'Password has been reset successfully' };
   }
 
   // Send verification email
@@ -132,6 +231,32 @@ export class AuthService {
     await this.mailerService.sendMail({
       to: email,
       subject: 'Verify Your Email - DevShare Lite',
+      html: content,
+    });
+  }
+
+  private async sendPasswordResetEmail(
+    email: string,
+    name: string,
+    code: string,
+  ) {
+    const templatePath = join(
+      __dirname,
+      '..',
+      '..',
+      'templates',
+      'reset-password.html',
+    );
+
+    const htmlTemplate = readFileSync(templatePath, 'utf8');
+
+    const content = htmlTemplate
+      .replace('{{name}}', name)
+      .replace('{{code}}', code);
+
+    await this.mailerService.sendMail({
+      to: email,
+      subject: 'Reset Your Password - DevShare Lite',
       html: content,
     });
   }

@@ -19,10 +19,23 @@ export class UserService {
     return this.userModel.findById(id).exec();
   }
 
-  async findByEmailVerificationToken(
+  async findByEmailVerificationCode(
     code: string,
   ): Promise<UserDocument | null> {
     return this.userModel.findOne({ emailVerificationCode: code }).exec();
+  }
+
+  async findByPasswordResetCode(code: string): Promise<UserDocument | null> {
+    return this.userModel
+      .findOne({
+        passwordResetCode: code,
+        passwordResetExpires: { $gt: new Date() },
+      })
+      .exec();
+  }
+
+  async findByPasswordResetToken(token: string) {
+    return this.userModel.findOne({ passwordResetToken: token });
   }
 
   async update(id: string, updateData: any): Promise<UserDocument | null> {
