@@ -18,7 +18,7 @@ export class CreatePostDto {
 
   @IsArray()
   @IsOptional()
-  tag?: string[];
+  tags?: string[];
 
   @IsEnum(PostStatus)
   @IsOptional()

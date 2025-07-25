@@ -6,18 +6,25 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { JwtAuthGuard } from '../common/passport/jwt-auth.guard';
+import { GetUser } from 'src/common/decorators';
 
-@Controller('post')
+@Controller('posts')
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body() createPostDto: CreatePostDto) {
-    return this.postService.create(createPostDto);
+  create(
+    @GetUser('_id') authorId: string,
+    @Body() createPostDto: CreatePostDto,
+  ) {
+    return this.postService.create(authorId, createPostDto);
   }
 
   @Get()
