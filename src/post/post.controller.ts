@@ -39,8 +39,8 @@ export class PostController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.postService.findOne(+id);
+  async findById(@Param('id') id: string) {
+    return this.postService.findById(id);
   }
 
   @Patch(':id')

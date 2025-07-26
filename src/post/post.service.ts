@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Post, PostDocument, PostStatus } from './schemas/post.schema';
 import { CreatePostDto, UpdatePostDto } from './dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -42,8 +42,19 @@ export class PostService {
     return { posts, total };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} post`;
+  async findById(id: string): Promise<PostDocument | null> {
+    const post = await this.postModel
+      .findById(id)
+      .populate('author', 'name email')
+      .exec();
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    await this.postModel.findByIdAndUpdate(id, { $inc: { viewCount: 1 } });
+
+    return post;
   }
 
   update(id: number, updatePostDto: UpdatePostDto) {
