@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Post, PostDocument } from './schemas/post.schema';
+import { Post, PostDocument, PostStatus } from './schemas/post.schema';
 import { CreatePostDto, UpdatePostDto } from './dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -18,8 +18,28 @@ export class PostService {
     return post.save();
   }
 
-  findAll() {
-    return `This action returns all post`;
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+    status?: PostStatus,
+  ): Promise<{ posts: Post[]; total: number }> {
+    page = Math.max(1, page);
+    limit = Math.max(1, limit);
+
+    const skip = (page - 1) * limit;
+    const filter = status ? { status } : { status: PostStatus.PUBLISHED };
+
+    const posts = await this.postModel
+      .find(filter)
+      .populate('author', 'name email') // lấy thông tin người viết bài
+      .sort({ createdAt: -1 })
+      .skip(skip) // bỏ qua bài trước đó
+      .limit(limit)
+      .exec();
+
+    const total = await this.postModel.countDocuments(filter);
+
+    return { posts, total };
   }
 
   findOne(id: number) {

@@ -7,12 +7,14 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { JwtAuthGuard } from '../common/passport/jwt-auth.guard';
-import { GetUser } from 'src/common/decorators';
+import { GetUser } from '../common/decorators';
+import { PostStatus } from './schemas/post.schema';
 
 @Controller('posts')
 export class PostController {
@@ -28,8 +30,12 @@ export class PostController {
   }
 
   @Get()
-  findAll() {
-    return this.postService.findAll();
+  async findAll(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+    @Query('status') status?: PostStatus,
+  ) {
+    return this.postService.findAll(parseInt(page), parseInt(limit), status);
   }
 
   @Get(':id')
