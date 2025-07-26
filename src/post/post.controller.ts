@@ -3,11 +3,11 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   UseGuards,
   Query,
+  Put,
 } from '@nestjs/common';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -15,6 +15,7 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { JwtAuthGuard } from '../common/passport/jwt-auth.guard';
 import { GetUser } from '../common/decorators';
 import { PostStatus } from './schemas/post.schema';
+import { Types } from 'mongoose';
 
 @Controller('posts')
 export class PostController {
@@ -23,7 +24,7 @@ export class PostController {
   @UseGuards(JwtAuthGuard)
   @Post()
   create(
-    @GetUser('_id') authorId: string,
+    @GetUser('_id') authorId: Types.ObjectId,
     @Body() createPostDto: CreatePostDto,
   ) {
     return this.postService.create(authorId, createPostDto);
@@ -52,13 +53,19 @@ export class PostController {
     return this.postService.findById(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto) {
-    return this.postService.update(+id, updatePostDto);
+  @UseGuards(JwtAuthGuard)
+  @Put(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() updatePostDto: UpdatePostDto,
+    @GetUser('_id') userId: Types.ObjectId,
+  ) {
+    return this.postService.update(id, updatePostDto, userId);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.postService.remove(+id);
+  delete(@Param('id') id: string, @GetUser('_id') userId: Types.ObjectId) {
+    return this.postService.delete(id, userId);
   }
 }

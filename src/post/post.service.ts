@@ -1,14 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Post, PostDocument, PostStatus } from './schemas/post.schema';
 import { CreatePostDto, UpdatePostDto } from './dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
 @Injectable()
 export class PostService {
   constructor(@InjectModel(Post.name) private postModel: Model<PostDocument>) {}
   create(
-    authorId: string,
+    authorId: Types.ObjectId,
     createPostDto: CreatePostDto,
   ): Promise<PostDocument | null> {
     const post = new this.postModel({
@@ -72,14 +76,6 @@ export class PostService {
       .exec();
   }
 
-  update(id: number, updatePostDto: UpdatePostDto) {
-    return `This action updates a #${id} post`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} post`;
-  }
-
   async search(
     query: string,
     page: number = 1,
@@ -109,5 +105,42 @@ export class PostService {
 
     const total = await this.postModel.countDocuments(searchFilter);
     return { posts, total };
+  }
+
+  async update(
+    id: string,
+    updatePostDto: UpdatePostDto,
+    userId: Types.ObjectId,
+  ): Promise<PostDocument | null> {
+    const post = await this.postModel.findById(id);
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    // console.log('>>' + post.author.toString());
+    // console.log(userId);
+
+    if (post.author.toString() !== userId.toString()) {
+      throw new ForbiddenException('You can only update your own posts');
+    }
+
+    return this.postModel
+      .findByIdAndUpdate(id, updatePostDto, { new: true })
+      .exec();
+  }
+
+  async delete(id: string, userId: Types.ObjectId): Promise<void> {
+    const post = await this.postModel.findById(id);
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    if (post.author.toString() !== userId.toString()) {
+      throw new ForbiddenException('You can only delete your own posts');
+    }
+
+    await this.postModel.findByIdAndDelete(id);
   }
 }
