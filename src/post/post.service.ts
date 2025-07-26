@@ -62,7 +62,7 @@ export class PostService {
   }
 
   async findByAuthor(
-    authorId: string,
+    authorId: Types.ObjectId,
     includePrivate: boolean = false,
   ): Promise<Post[]> {
     const filter = includePrivate

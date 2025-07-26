@@ -198,6 +198,7 @@ export class AuthService {
     await this.userService.update(user.id, {
       password: hashedPassword,
       passwordResetCode: null,
+      passwordResetToken: null,
       passwordResetExpires: null,
     });
 

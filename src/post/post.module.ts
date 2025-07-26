@@ -10,5 +10,6 @@ import { Post, PostSchema } from './schemas/post.schema';
   ],
   controllers: [PostController],
   providers: [PostService],
+  exports: [MongooseModule],
 })
 export class PostModule {}

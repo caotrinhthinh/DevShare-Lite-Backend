@@ -68,4 +68,10 @@ export class PostController {
   delete(@Param('id') id: string, @GetUser('_id') userId: Types.ObjectId) {
     return this.postService.delete(id, userId);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('user/my-posts')
+  async getMyPosts(@GetUser('_id') userId: Types.ObjectId) {
+    return this.postService.findByAuthor(userId, true);
+  }
 }
