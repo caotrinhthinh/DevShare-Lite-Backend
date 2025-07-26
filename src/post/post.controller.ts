@@ -38,6 +38,15 @@ export class PostController {
     return this.postService.findAll(parseInt(page), parseInt(limit), status);
   }
 
+  @Get('search')
+  async search(
+    @Query('q') query: string,
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+  ) {
+    return this.postService.search(query, parseInt(page), parseInt(limit));
+  }
+
   @Get(':id')
   async findById(@Param('id') id: string) {
     return this.postService.findById(id);

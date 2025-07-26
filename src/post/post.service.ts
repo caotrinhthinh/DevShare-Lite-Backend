@@ -57,11 +57,57 @@ export class PostService {
     return post;
   }
 
+  async findByAuthor(
+    authorId: string,
+    includePrivate: boolean = false,
+  ): Promise<Post[]> {
+    const filter = includePrivate
+      ? { author: authorId }
+      : { author: authorId, status: PostStatus.PUBLISHED };
+
+    return this.postModel
+      .find(filter)
+      .populate('author', 'name email')
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
   update(id: number, updatePostDto: UpdatePostDto) {
     return `This action updates a #${id} post`;
   }
 
   remove(id: number) {
     return `This action removes a #${id} post`;
+  }
+
+  async search(
+    query: string,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<{ posts: Post[]; total: number }> {
+    page = Math.max(1, page);
+    limit = Math.max(1, limit);
+
+    const skip = (page - 1) * limit;
+
+    const searchFilter = {
+      status: PostStatus.PUBLISHED,
+      $or: [
+        { title: { $regex: query, $options: 'i' } },
+        { content: { $regex: query, $options: 'i' } },
+        { tags: { $in: [new RegExp(query, 'i')] } },
+      ],
+    };
+
+    const posts = await this.postModel
+      .find(searchFilter)
+      .populate('author', 'name email')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .exec();
+
+    const total = await this.postModel.countDocuments(searchFilter);
+    return { posts, total };
   }
 }
