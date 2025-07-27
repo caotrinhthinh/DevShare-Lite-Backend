@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
+import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -15,13 +16,13 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true, // loại bỏ các field không khai báo trong DTO
-      forbidNonWhitelisted: true, // Nếu field không hợp lế, ném lỗi 400 Bad Request
+      forbidNonWhitelisted: true, // Nếu field không hợp lệ, ném lỗi 400 Bad Request
       transform: true, // Tự động ép kiểu
     }),
   );
 
   // Global exception filter
-  // app.useGlobalFilters(new AllExceptionsFilter());
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   // CORS
   app.enableCors({
