@@ -1,6 +1,12 @@
+import { UpdateCommentDto } from './dto/update-comment.dto';
 import { Model, Types } from 'mongoose';
 import { CreateCommentDto } from './dto/create-comment.dto';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { CommentDocument, Comment } from './schemas/comment.schema';
 import { Post, PostDocument } from '../post/schemas/post.schema';
@@ -25,9 +31,16 @@ export class CommentService {
 
     // If it's a reply, verify parent comment exists
     if (parentComment) {
-      const parent = await this.commentModel.findById(parentComment);
-      if (!parent || parent.post.toString() !== postId) {
+      const parent = await this.commentModel.findById(parentComment).lean();
+
+      if (!parent) {
         throw new NotFoundException('Parent comment not found');
+      }
+
+      if (parent.post.toString() !== postId.toString()) {
+        throw new BadRequestException(
+          'Parent comment does not belong to the same post',
+        );
       }
     }
 
@@ -58,4 +71,50 @@ export class CommentService {
       .populate('author', 'name email')
       .exec();
   }
+
+  async findByPost(postId: string): Promise<Comment[]> {
+    return this.commentModel
+      .find({ post: postId, parentComment: null })
+      .populate('author', 'name email')
+      .populate({
+        path: 'replies',
+        populate: {
+          path: 'author',
+          select: 'name email',
+        },
+      })
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
+  async update(
+    id: string,
+    updateCommentDto: UpdateCommentDto,
+    userId: Types.ObjectId,
+  ): Promise<CommentDocument> {
+    const comment = await this.commentModel.findById(id);
+
+    if (!comment) {
+      throw new NotFoundException('Comment not found');
+    }
+
+    if (comment.author.toString() !== userId.toString()) {
+      throw new ForbiddenException('You can only update your own comments');
+    }
+
+    const updated = await this.commentModel
+      .findByIdAndUpdate(id, updateCommentDto, {
+        new: true,
+      })
+      .populate('author', 'name email')
+      .exec();
+
+    if (!updated) {
+      throw new NotFoundException('Comment not found after update');
+    }
+
+    return updated;
+  }
+
+  async delete(id: string, userdId: string): Promise<void> {}
 }

@@ -1,6 +1,14 @@
-import { Body, Controller, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import { CommentService } from './comment.service';
-import { CreateCommentDto } from './dto';
+import { CreateCommentDto, UpdateCommentDto } from './dto';
 import { GetUser } from 'src/common/decorators';
 import { Types } from 'mongoose';
 import { JwtAuthGuard } from 'src/common/passport/jwt-auth.guard';
@@ -17,5 +25,21 @@ export class CommentController {
     @GetUser('_id') userId: Types.ObjectId,
   ) {
     return this.commentService.create(postId, createCommentDto, userId);
+  }
+
+  // Tìm các comment của bài post đó
+  @Get()
+  async findByPost(@Param('postId') postId: string) {
+    return this.commentService.findByPost(postId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put(':id')
+  async update(
+    @Param('id') id: string, //commentId
+    @Body() updateCommentDto: UpdateCommentDto,
+    @GetUser('_id') userId: Types.ObjectId,
+  ) {
+    return this.commentService.update(id, updateCommentDto, userId);
   }
 }

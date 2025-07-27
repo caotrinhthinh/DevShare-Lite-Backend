@@ -48,6 +48,7 @@ export class PostController {
     return this.postService.search(query, parseInt(page), parseInt(limit));
   }
 
+  // Tìm bài post có id là id
   @Get(':id')
   async findById(@Param('id') id: string) {
     return this.postService.findById(id);
