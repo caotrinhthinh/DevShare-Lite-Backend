@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
-import { LocalAuthGuard } from '../common/passport/local-auth.guard';
+import { LocalAuthGuard } from '../common/guards/local-auth.guard';
 import { RegisterDto } from './dto/register.dto';
 import { SanitizedUser } from '../user/interface/user.interface';
 import { ResetPasswordDto } from './dto/reset-password.dto';

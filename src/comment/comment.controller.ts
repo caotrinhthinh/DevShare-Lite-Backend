@@ -12,7 +12,7 @@ import { CommentService } from './comment.service';
 import { CreateCommentDto, UpdateCommentDto } from './dto';
 import { GetUser } from 'src/common/decorators';
 import { Types } from 'mongoose';
-import { JwtAuthGuard } from 'src/common/passport/jwt-auth.guard';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 
 @Controller('posts/:postId/comments')
 export class CommentController {
