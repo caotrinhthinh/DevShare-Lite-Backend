@@ -16,13 +16,26 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { GetUser } from '../common/decorators';
 import { PostStatus } from './schemas/post.schema';
 import { Types } from 'mongoose';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
+@ApiTags('Posts')
+@ApiBearerAuth() // Yêu cầu Bearer token nếu dùng JwtAuthGuard
 @Controller('posts')
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
   @UseGuards(JwtAuthGuard)
   @Post()
+  @ApiOperation({ summary: 'Create a new post' })
+  @ApiBody({ type: CreatePostDto })
+  @ApiResponse({ status: 201, description: 'Post created successfully' })
+  @ApiResponse({ status: 400, description: 'Validation failed' })
   create(
     @GetUser('_id') authorId: Types.ObjectId,
     @Body() createPostDto: CreatePostDto,
