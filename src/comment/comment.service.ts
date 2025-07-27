@@ -116,7 +116,38 @@ export class CommentService {
     return updated;
   }
 
-  // async delete(id: string, userId: string): Promise<void> {}
+  async delete(id: string, userId: Types.ObjectId): Promise<void> {
+    const comment = await this.commentModel.findById(id);
+
+    if (!comment) {
+      throw new NotFoundException('Comment not found');
+    }
+
+    if (comment.author.toString() !== userId.toString()) {
+      throw new ForbiddenException('You can only delete your own comments');
+    }
+
+    // Delete all replies
+    await this.commentModel.deleteMany({ parentComment: id });
+
+    // Remove from parent's replies if it's a reply
+    if (comment.parentComment) {
+      await this.commentModel.findByIdAndUpdate(comment.parentComment, {
+        $pull: { replies: id },
+      });
+    }
+
+    // Delete the comment
+    await this.commentModel.findByIdAndDelete(id);
+
+    // Update post comment count
+    const replyCount = await this.commentModel.countDocuments({
+      parentComment: id,
+    });
+    await this.postModel.findByIdAndUpdate(comment.post, {
+      $inc: { commentCount: -(replyCount + 1) },
+    });
+  }
 
   async likeComment(
     id: string,

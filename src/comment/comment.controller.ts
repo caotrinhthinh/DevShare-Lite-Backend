@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -41,6 +42,15 @@ export class CommentController {
     @GetUser('_id') userId: Types.ObjectId,
   ) {
     return this.commentService.update(id, updateCommentDto, userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  async delete(
+    @Param('id') id: string,
+    @GetUser('_id') userId: Types.ObjectId,
+  ) {
+    return this.commentService.delete(id, userId);
   }
 
   @UseGuards(JwtAuthGuard)
