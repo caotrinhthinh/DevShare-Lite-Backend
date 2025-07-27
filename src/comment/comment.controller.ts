@@ -42,4 +42,13 @@ export class CommentController {
   ) {
     return this.commentService.update(id, updateCommentDto, userId);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/like')
+  async likeComment(
+    @Param('id') id: string,
+    @GetUser('_id') userId: Types.ObjectId,
+  ) {
+    return this.commentService.likeComment(id, userId);
+  }
 }

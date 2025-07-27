@@ -116,5 +116,38 @@ export class CommentService {
     return updated;
   }
 
-  async delete(id: string, userdId: string): Promise<void> {}
+  // async delete(id: string, userId: string): Promise<void> {}
+
+  async likeComment(
+    id: string,
+    userId: Types.ObjectId,
+  ): Promise<CommentDocument> {
+    const comment = await this.commentModel.findById(id);
+
+    if (!comment) {
+      throw new NotFoundException('Comment not found');
+    }
+
+    const userIdStr = userId.toString();
+    const likedByStr = comment.likedBy.map((uid) => uid.toString());
+
+    const hasLiked = likedByStr.includes(userIdStr);
+
+    if (hasLiked) {
+      comment.likeCount = Math.max(comment.likeCount - 1, 0);
+      comment.likedBy = comment.likedBy.filter(
+        (uid) => uid.toString() !== userIdStr,
+      );
+    } else {
+      comment.likeCount += 1;
+      comment.likedBy.push(userId);
+    }
+
+    await comment.save();
+
+    return (await this.commentModel
+      .findById(id)
+      .populate('author', 'name email')
+      .exec())!;
+  }
 }

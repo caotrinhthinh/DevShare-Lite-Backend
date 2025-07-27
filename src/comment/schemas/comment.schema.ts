@@ -22,6 +22,9 @@ export class Comment {
 
   @Prop({ default: 0 })
   likeCount: number;
+
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }], default: [] })
+  likedBy: Types.ObjectId[];
 }
 
 export const CommentSchema = SchemaFactory.createForClass(Comment);
