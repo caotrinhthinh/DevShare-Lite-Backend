@@ -3,14 +3,13 @@ import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
   const port = parseInt(configService.get<string>('PORT') || '3000', 10);
   app.setGlobalPrefix('api', { exclude: [''] });
-
-  await app.listen(port);
 
   // Global validation pipe
   app.useGlobalPipes(
@@ -29,6 +28,19 @@ async function bootstrap() {
     origin: process.env.FRONTEND_URL || 'http://localhost:8080',
     credentials: true,
   });
+
+  // Swagger configuration
+  const config = new DocumentBuilder()
+    .setTitle('DevShare Lite API')
+    .setDescription('API documentation for DevShare Lite forum')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document); // http://localhost:port/api
+
+  await app.listen(port);
 }
 
 bootstrap();

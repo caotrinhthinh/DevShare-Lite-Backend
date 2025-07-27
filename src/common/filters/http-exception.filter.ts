@@ -17,7 +17,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    const stauts =
+    const status =
       exception instanceof HttpException
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
@@ -36,7 +36,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     })();
 
     const errorResponse = {
-      stautsCode: stauts,
+      statusCode: status,
       timeStamp: new Date().toISOString(),
       path: request.url,
       method: request.method,
@@ -47,6 +47,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
       `${request.method} ${request.url} - ${status} - ${JSON.stringify(errorResponse)}`,
     );
 
-    response.status(stauts).json(errorResponse);
+    response.status(status).json(errorResponse);
   }
 }
