@@ -28,3 +28,21 @@ export class Comment {
 }
 
 export const CommentSchema = SchemaFactory.createForClass(Comment);
+
+// Tìm comment theo bài post và comment cha
+CommentSchema.index({ post: 1, parentComment: 1 });
+
+// Tìm nhanh các comment có parentComment = null (comment gốc)
+CommentSchema.index({ parentComment: 1 });
+
+// Tìm theo author
+CommentSchema.index({ author: 1 });
+
+// Tìm theo bài post để lọc comment
+CommentSchema.index({ post: 1 });
+
+// Tìm theo thời gian tạo
+CommentSchema.index({ createdAt: -1 });
+
+// Tìm comment được like bởi user (trong likedBy)
+CommentSchema.index({ likedBy: 1 });

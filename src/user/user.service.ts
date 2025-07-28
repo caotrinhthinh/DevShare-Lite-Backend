@@ -6,8 +6,9 @@ import {
 import { User, UserDocument } from './schemas/user.schemas';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { ChangePasswordDto } from 'src/auth/dto/change-password.dto';
+import { ChangePasswordDto } from '../auth/dto/change-password.dto';
 import * as bcrypt from 'bcrypt';
+import { hashPasswordHelper } from '../helpers/util';
 
 @Injectable()
 export class UserService {
@@ -41,7 +42,7 @@ export class UserService {
   }
 
   async findByPasswordResetToken(token: string) {
-    return this.userModel.findOne({ passwordResetToken: token });
+    return this.userModel.findOne({ passwordResetToken: token }).explain(); // có trả về "IXSCAN" => đang dùng index
   }
 
   async update(id: string, updateData: any): Promise<UserDocument | null> {
@@ -62,7 +63,7 @@ export class UserService {
     if (!isMatch)
       throw new BadRequestException('Current password is incorrect');
 
-    const hashed = await bcrypt.hash(newPassword, 10);
+    const hashed = await hashPasswordHelper(newPassword);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     await this.update(user.id, { password: hashed });
 

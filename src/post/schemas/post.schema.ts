@@ -8,7 +8,7 @@ export enum PostStatus {
   PUBLISHED = 'published',
 }
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, collection: 'posts' })
 export class Post {
   @Prop({ required: true })
   title: string;
@@ -36,3 +36,8 @@ export class Post {
 }
 
 export const PostSchema = SchemaFactory.createForClass(Post);
+
+PostSchema.index({ title: 'text', content: 'text' }); // full-text search
+PostSchema.index({ author: 1 }); // lọc theo author
+PostSchema.index({ createdAt: -1 }); // sắp xếp mới -> cũ
+PostSchema.index({ tags: 1 }); // tìm theo tag

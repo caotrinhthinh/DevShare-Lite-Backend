@@ -43,3 +43,7 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+UserSchema.index({ emailVerificationCode: 1 });
+UserSchema.index({ passwordResetCode: 1, passwordResetExpires: 1 });
+UserSchema.index({ passwordResetToken: 1 });
