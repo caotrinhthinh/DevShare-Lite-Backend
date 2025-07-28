@@ -7,6 +7,8 @@ import { CommentModule } from './comment/comment.module';
 import { AuthModule } from './auth/auth.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { CacheMiddleware } from './common/middleware/cache.middleware';
+import { CustomCacheModule } from './cache/cache.module';
 
 @Module({
   imports: [
@@ -41,6 +43,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
       }),
     }),
 
+    CustomCacheModule,
     UserModule,
     AuthModule,
     PostModule,
@@ -49,6 +52,6 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggerMiddleware).forRoutes('*');
+    consumer.apply(LoggerMiddleware, CacheMiddleware).forRoutes('*');
   }
 }

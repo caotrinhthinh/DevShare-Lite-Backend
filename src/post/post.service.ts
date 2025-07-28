@@ -7,10 +7,15 @@ import { Post, PostDocument, PostStatus } from './schemas/post.schema';
 import { CreatePostDto, UpdatePostDto } from './dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { CacheService } from '../cache/cache.service';
 
 @Injectable()
 export class PostService {
-  constructor(@InjectModel(Post.name) private postModel: Model<PostDocument>) {}
+  constructor(
+    @InjectModel(Post.name) private postModel: Model<PostDocument>,
+    private readonly cacheService: CacheService,
+  ) {}
+
   create(
     authorId: Types.ObjectId,
     createPostDto: CreatePostDto,
@@ -47,9 +52,15 @@ export class PostService {
   }
 
   async findById(id: string): Promise<PostDocument | null> {
+    const cacheKey = `post:${id}`;
+
+    const cached = await this.cacheService.get<PostDocument>(cacheKey);
+    if (cached) return cached;
+
     const post = await this.postModel
       .findById(id)
       .populate('author', 'name email')
+      .lean()
       .exec();
 
     if (!post) {
@@ -57,6 +68,9 @@ export class PostService {
     }
 
     await this.postModel.findByIdAndUpdate(id, { $inc: { viewCount: 1 } });
+
+    // Cache lại kết quả
+    await this.cacheService.set(cacheKey, post, 600); // TTL 600s
 
     return post;
   }
@@ -125,6 +139,8 @@ export class PostService {
       throw new ForbiddenException('You can only update your own posts');
     }
 
+    await this.cacheService.del(`post:${id}`);
+
     return this.postModel
       .findByIdAndUpdate(id, updatePostDto, { new: true })
       .exec();
@@ -140,6 +156,8 @@ export class PostService {
     if (post.author.toString() !== userId.toString()) {
       throw new ForbiddenException('You can only delete your own posts');
     }
+
+    await this.cacheService.del(`post:${id}`);
 
     await this.postModel.findByIdAndDelete(id);
   }
