@@ -32,17 +32,8 @@ export class UserService {
     return this.userModel.findOne({ emailVerificationCode: code }).exec();
   }
 
-  async findByPasswordResetCode(code: string): Promise<UserDocument | null> {
-    return this.userModel
-      .findOne({
-        passwordResetCode: code,
-        passwordResetExpires: { $gt: new Date() },
-      })
-      .exec();
-  }
-
-  async findByPasswordResetToken(token: string) {
-    return this.userModel.findOne({ passwordResetToken: token }).explain(); // có trả về "IXSCAN" => đang dùng index
+  async findByPasswordResetToken(resetToken: string) {
+    return this.userModel.findOne({ passwordResetToken: resetToken }).explain(); // có trả về "IXSCAN" => đang dùng index
   }
 
   async update(id: string, updateData: any): Promise<UserDocument | null> {

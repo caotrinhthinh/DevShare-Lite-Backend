@@ -160,11 +160,13 @@ export class AuthService {
     };
   }
 
-  async verifyResetCode(verifyResetCode: VerifyResetCodeDto) {
-    const { code } = verifyResetCode;
-    const user = await this.userService.findByPasswordResetCode(code);
+  async verifyResetCode(dto: VerifyResetCodeDto) {
+    const { email, code } = dto;
+
+    const user = await this.userService.findByEmail(email);
     if (
       !user ||
+      user.passwordResetCode !== code ||
       !user.passwordResetExpires ||
       user.passwordResetExpires < new Date()
     ) {
@@ -172,7 +174,6 @@ export class AuthService {
     }
 
     const token = uuid();
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     await this.userService.update(user.id, {
       passwordResetToken: token,
       passwordResetCode: null,
@@ -183,9 +184,9 @@ export class AuthService {
   }
 
   async resetPassword(resetPasswordDto: ResetPasswordDto) {
-    const { token, newPassword } = resetPasswordDto;
+    const { resetToken, newPassword } = resetPasswordDto;
 
-    const user = await this.userService.findByPasswordResetToken(token);
+    const user = await this.userService.findByPasswordResetToken(resetToken);
 
     if (!user) {
       throw new BadRequestException('Invalid or expired reset token');
