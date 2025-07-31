@@ -1,6 +1,3 @@
-import { ForgotPasswordDto } from './dto/forgot-password.dto';
-import { ResetPasswordDto } from './dto/reset-password.dto';
-import { RegisterDto } from './dto/register.dto';
 import {
   BadRequestException,
   ConflictException,
@@ -17,6 +14,7 @@ import { join } from 'path';
 import { readFileSync } from 'fs';
 import { v4 as uuid } from 'uuid';
 import { VerifyResetCodeDto } from './dto/verify-reset-code.dto';
+import { ForgotPasswordDto, RegisterDto, ResetPasswordDto } from './dto';
 
 @Injectable()
 export class AuthService {
