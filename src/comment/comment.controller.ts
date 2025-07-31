@@ -14,10 +14,24 @@ import { GetUser } from 'src/common/decorators';
 import { Types } from 'mongoose';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiBody,
+} from '@nestjs/swagger';
+
+@ApiBearerAuth()
+@ApiTags('Comments')
 @Controller('posts/:postId/comments')
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}
 
+  @ApiOperation({ summary: 'Create a comment' })
+  @ApiResponse({ status: 201, description: 'Comment created' })
+  @ApiParam({ name: 'postId', description: 'ID of the post' })
   @UseGuards(JwtAuthGuard)
   @Post()
   async create(
@@ -28,35 +42,53 @@ export class CommentController {
     return this.commentService.create(postId, createCommentDto, userId);
   }
 
-  // Tìm các comment của bài post đó
+  @ApiOperation({ summary: 'Get all comments for a post' })
+  @ApiResponse({ status: 200, description: 'List of comments' })
+  @ApiParam({ name: 'postId', description: 'ID of the post' })
   @Get()
   async findByPost(@Param('postId') postId: string) {
     return this.commentService.findByPost(postId);
   }
 
+  @ApiOperation({ summary: 'Update a comment' })
+  @ApiBody({ type: UpdateCommentDto })
+  @ApiParam({ name: 'postId', required: true })
+  @ApiParam({ name: 'id', description: 'Comment ID' })
   @UseGuards(JwtAuthGuard)
-  @Put(':id')
+  @ApiResponse({ status: 200, description: 'Comment updated' })
+  @Put(':commentId')
   async update(
-    @Param('id') id: string, //commentId
+    @Param('postId') postId: string,
+    @Param('commentId') id: string,
     @Body() updateCommentDto: UpdateCommentDto,
     @GetUser('_id') userId: Types.ObjectId,
   ) {
     return this.commentService.update(id, updateCommentDto, userId);
   }
 
+  @ApiOperation({ summary: 'Delete a comment' })
+  @ApiResponse({ status: 200, description: 'Comment deleted' })
+  @ApiParam({ name: 'postId' })
+  @ApiParam({ name: 'id', description: 'Comment ID' })
   @UseGuards(JwtAuthGuard)
-  @Delete(':id')
+  @Delete(':commentId')
   async delete(
-    @Param('id') id: string,
+    @Param('postId') postId: string,
+    @Param('commentId') id: string,
     @GetUser('_id') userId: Types.ObjectId,
   ) {
     return this.commentService.delete(id, userId);
   }
 
+  @ApiOperation({ summary: 'Like/unlike a comment' })
+  @ApiResponse({ status: 200, description: 'Like toggled' })
+  @ApiParam({ name: 'postId' })
+  @ApiParam({ name: 'id', description: 'Comment ID' })
   @UseGuards(JwtAuthGuard)
-  @Post(':id/like')
+  @Post(':commentId/like')
   async likeComment(
-    @Param('id') id: string,
+    @Param('postId') postId: string,
+    @Param('commentId') id: string,
     @GetUser('_id') userId: Types.ObjectId,
   ) {
     return this.commentService.likeComment(id, userId);
