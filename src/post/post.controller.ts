@@ -20,6 +20,8 @@ import {
   ApiBearerAuth,
   ApiBody,
   ApiOperation,
+  ApiParam,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -44,6 +46,16 @@ export class PostController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Get all published posts' })
+  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: PostStatus,
+  })
+  @ApiResponse({ status: 200, description: 'List of posts' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   async findAll(
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
@@ -53,6 +65,7 @@ export class PostController {
   }
 
   @Get('search')
+  @ApiOperation({ summary: 'Search posts by title, content, or tags' })
   async search(
     @Query('q') query: string,
     @Query('page') page: string = '1',
@@ -63,12 +76,23 @@ export class PostController {
 
   // Tìm bài post có id là id
   @Get(':id')
+  @ApiOperation({ summary: 'Get post by ID' })
+  @ApiParam({ name: 'id', required: true, description: 'Post ID' })
+  @ApiResponse({ status: 200, description: 'Post found' })
+  @ApiResponse({ status: 404, description: 'Post not found' })
+  @ApiOperation({ summary: 'Get a single post by ID' })
   async findById(@Param('id') id: string) {
     return this.postService.findById(id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Put(':id')
+  @ApiOperation({ summary: 'Update a post (only by the author)' })
+  @ApiParam({ name: 'id', required: true, description: 'Post ID' })
+  @ApiBody({ type: UpdatePostDto })
+  @ApiResponse({ status: 200, description: 'Post updated successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden: Not the author' })
+  @ApiResponse({ status: 404, description: 'Post not found' })
   async update(
     @Param('id') id: string,
     @Body() updatePostDto: UpdatePostDto,
@@ -79,12 +103,19 @@ export class PostController {
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete a post (only by the author)' })
+  @ApiParam({ name: 'id', required: true, description: 'Post ID' })
+  @ApiResponse({ status: 200, description: 'Post deleted successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden: Not the author' })
+  @ApiResponse({ status: 404, description: 'Post not found' })
   delete(@Param('id') id: string, @GetUser('_id') userId: Types.ObjectId) {
     return this.postService.delete(id, userId);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('user/my-posts')
+  @Get('/me')
+  @ApiOperation({ summary: 'Get posts of current logged-in user' })
+  @ApiResponse({ status: 200, description: "User's posts retrieved" })
   async getMyPosts(@GetUser('_id') userId: Types.ObjectId) {
     return this.postService.findByAuthor(userId, true);
   }
