@@ -174,6 +174,7 @@ export class AuthService {
     }
 
     const token = uuid();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     await this.userService.update(user.id, {
       passwordResetToken: token,
       passwordResetCode: null,
