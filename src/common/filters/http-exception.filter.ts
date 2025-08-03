@@ -30,7 +30,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const resMessage = (() => {
       if (typeof message === 'string') return message;
       if (typeof message === 'object' && message && 'message' in message) {
-        return (message as { message: string }).message;
+        return (message as { message: string | string[] }).message;
       }
       return 'Unexpected error';
     })();
@@ -44,7 +44,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
     };
 
     this.logger.error(
-      `${request.method} ${request.url} - ${status} - ${JSON.stringify(errorResponse)}`,
+      `${request.method} ${request.url} - ${status}`,
+      exception instanceof Error ? exception.stack : String(exception),
     );
 
     response.status(status).json(errorResponse);

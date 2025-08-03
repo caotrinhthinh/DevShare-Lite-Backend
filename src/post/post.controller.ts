@@ -111,12 +111,4 @@ export class PostController {
   delete(@Param('id') id: string, @GetUser('_id') userId: Types.ObjectId) {
     return this.postService.delete(id, userId);
   }
-
-  @UseGuards(JwtAuthGuard)
-  @Get('/me')
-  @ApiOperation({ summary: 'Get posts of current logged-in user' })
-  @ApiResponse({ status: 200, description: "User's posts retrieved" })
-  async getMyPosts(@GetUser('_id') userId: Types.ObjectId) {
-    return this.postService.findByAuthor(userId, true);
-  }
 }

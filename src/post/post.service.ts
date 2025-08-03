@@ -75,21 +75,6 @@ export class PostService {
     return post;
   }
 
-  async findByAuthor(
-    authorId: Types.ObjectId,
-    includePrivate: boolean = false,
-  ): Promise<Post[]> {
-    const filter = includePrivate
-      ? { author: authorId }
-      : { author: authorId, status: PostStatus.PUBLISHED };
-
-    return this.postModel
-      .find(filter)
-      .populate('author', 'name email')
-      .sort({ createdAt: -1 })
-      .exec();
-  }
-
   async search(
     query: string,
     page: number = 1,
@@ -160,5 +145,20 @@ export class PostService {
     await this.cacheService.del(`post:${id}`);
 
     await this.postModel.findByIdAndDelete(id);
+  }
+
+  async findByAuthor(
+    authorId: Types.ObjectId,
+    includePrivate: boolean = false,
+  ): Promise<Post[]> {
+    const filter = includePrivate
+      ? { author: authorId }
+      : { author: authorId, status: PostStatus.PUBLISHED };
+
+    return this.postModel
+      .find(filter)
+      .populate('author', 'name email')
+      .sort({ createdAt: -1 })
+      .exec();
   }
 }

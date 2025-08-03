@@ -12,6 +12,6 @@ import { CustomCacheModule } from '../cache/cache.module';
   ],
   controllers: [PostController],
   providers: [PostService],
-  exports: [MongooseModule],
+  exports: [PostService, MongooseModule],
 })
 export class PostModule {}

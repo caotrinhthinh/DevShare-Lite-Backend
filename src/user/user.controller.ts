@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { PostService } from './../post/post.service';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  UseGuards,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { ChangePasswordDto } from '../auth/dto/change-password.dto';
@@ -11,12 +19,16 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { Types } from 'mongoose';
 
 @ApiTags('Users')
 @ApiBearerAuth()
 @Controller('users')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private postService: PostService,
+  ) {}
 
   // Đổi mật khẩu
   @UseGuards(JwtAuthGuard)
@@ -56,5 +68,21 @@ export class UserController {
       role: user.role,
       createdAt: user.createdAt,
     };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/me/posts')
+  @ApiOperation({ summary: 'Get posts of current logged-in user' })
+  @ApiResponse({ status: 200, description: "User's posts retrieved" })
+  async getMyPosts(@GetUser('_id') userId: Types.ObjectId) {
+    try {
+      console.log('Current user ID:', userId);
+
+      const posts = await this.postService.findByAuthor(userId, true);
+      return posts;
+    } catch (error) {
+      console.error('Error in getMyPosts:', error);
+      throw new InternalServerErrorException('Failed to retrieve user posts');
+    }
   }
 }
