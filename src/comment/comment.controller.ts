@@ -29,6 +29,19 @@ import {
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}
 
+  // Đặt lên trên @Get() để tránh conflict route
+  @ApiOperation({ summary: 'Get all replies of a comment' })
+  @ApiResponse({ status: 200, description: 'List of nested replies' })
+  @ApiParam({ name: 'postId' })
+  @ApiParam({ name: 'commentId' })
+  @Get(':commentId/replies')
+  async getReplies(
+    @Param('postId') postId: string,
+    @Param('commentId') commentId: string,
+  ) {
+    return this.commentService.findReplies(commentId);
+  }
+
   @ApiOperation({ summary: 'Create a comment' })
   @ApiResponse({ status: 201, description: 'Comment created' })
   @ApiParam({ name: 'postId', description: 'ID of the post' })

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { Model, Types } from 'mongoose';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -77,7 +78,7 @@ export class CommentService {
       .find({ post: postId, parentComment: null })
       .populate('author', 'name email')
       .populate({
-        path: 'replies',
+        path: 'replies', // thay thế ObjectId thành toàn bộ Comment Object
         populate: {
           path: 'author',
           select: 'name email',
@@ -180,5 +181,23 @@ export class CommentService {
       .findById(id)
       .populate('author', 'name email')
       .exec())!;
+  }
+
+  async findReplies(commentId: string): Promise<any[]> {
+    const fetchRepliesRecursively = async (
+      parentId: string,
+    ): Promise<any[]> => {
+      const replies = await this.commentModel
+        .find({ parentComment: parentId })
+        .populate('author', 'name email')
+        .lean();
+
+      for (const reply of replies) {
+        reply.replies = await fetchRepliesRecursively(reply._id.toString());
+      }
+
+      return replies;
+    };
+    return fetchRepliesRecursively(commentId);
   }
 }
