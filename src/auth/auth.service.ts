@@ -87,10 +87,11 @@ export class AuthService {
   }
 
   async login(user: SanitizedUser, res: Response) {
-    // Generate JWT token
     const payload = { email: user.email, sub: user.id };
 
+    // Generate JWT token
     const access_token = await this.generateToken(payload.sub);
+
     res.cookie('access_token', access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
