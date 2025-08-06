@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Post,
   Query,
   Request,
@@ -54,7 +56,14 @@ export class AuthController {
     return this.authService.login(req.user, res); // req.user được inject từ Local.strategy.validate()
   }
 
-  async logout() {}
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Logout user', description: 'Clear JWT cookie' })
+  @ApiResponse({ status: 200, description: 'User successfully logged out' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
+  logout(@Res({ passthrough: true }) res: Response) {
+    return this.authService.logout(res);
+  }
 
   // Xác thực email bằng mã code
   @Get('verify-email')
