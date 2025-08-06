@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -26,7 +28,7 @@ async function bootstrap() {
   // CORS
   app.enableCors({
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-    credentials: true,
+    credentials: true, // Cho phép gửi cookie
   });
 
   // Swagger configuration
@@ -39,6 +41,8 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document); // http://localhost:port/api
+
+  app.use(cookieParser());
 
   await app.listen(port);
 }

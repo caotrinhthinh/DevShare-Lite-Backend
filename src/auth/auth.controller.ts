@@ -47,9 +47,14 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'User logged in successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
-  login(@Request() req: { user: SanitizedUser }) {
-    return this.authService.login(req.user); // req.user được inject từ Local.strategy.validate()
+  login(
+    @Request() req: { user: SanitizedUser },
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.authService.login(req.user, res); // req.user được inject từ Local.strategy.validate()
   }
+
+  async logout() {}
 
   // Xác thực email bằng mã code
   @Get('verify-email')

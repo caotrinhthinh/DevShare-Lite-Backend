@@ -15,6 +15,7 @@ import { readFileSync } from 'fs';
 import { v4 as uuid } from 'uuid';
 import { VerifyResetCodeDto } from './dto/verify-reset-code.dto';
 import { ForgotPasswordDto, RegisterDto, ResetPasswordDto } from './dto';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -85,13 +86,26 @@ export class AuthService {
     };
   }
 
-  login(user: SanitizedUser) {
+  async login(user: SanitizedUser, res: Response) {
     // Generate JWT token
     const payload = { email: user.email, sub: user.id };
+
+    const access_token = await this.generateToken(payload.sub);
+    res.cookie('access_token', access_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
     return {
-      access_token: this.jwtService.sign(payload),
       user,
+      message: 'Login successful',
     };
+  }
+
+  logout(res: Response) {
+    res.clearCookie('access_token');
+    return { message: 'Logged out successfully' };
   }
 
   async verifyEmail(code: string) {
@@ -258,5 +272,10 @@ export class AuthService {
       subject: 'Reset Your Password - DevShare Lite',
       html: content,
     });
+  }
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async generateToken(userId: string): Promise<string> {
+    return this.jwtService.sign({ sub: userId });
   }
 }
