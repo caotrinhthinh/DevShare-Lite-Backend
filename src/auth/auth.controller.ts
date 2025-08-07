@@ -112,7 +112,6 @@ export class AuthController {
   @ApiResponse({ status: 404, description: 'Reset token not found' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 500, description: 'Internal server error' })
-  @UseGuards(LocalAuthGuard)
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return this.authService.resetPassword(resetPasswordDto);
   }
