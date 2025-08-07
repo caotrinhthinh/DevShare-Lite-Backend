@@ -27,7 +27,7 @@ export class UploadController {
     return this.uploadService.uploadUserAvatar(userId, file);
   }
 
-  @Post('post/:postId')
+  @Post('post')
   @UseInterceptors(FilesInterceptor('file'))
   @UseGuards(JwtAuthGuard)
   uploadPostImage(@UploadedFiles() files: Express.Multer.File[]) {
