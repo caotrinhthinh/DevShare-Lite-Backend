@@ -9,6 +9,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { CacheMiddleware } from './common/middleware/cache.middleware';
 import { CustomCacheModule } from './cache/cache.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { CustomCacheModule } from './cache/cache.module';
     AuthModule,
     PostModule,
     CommentModule,
+    UploadModule,
   ],
 })
 export class AppModule implements NestModule {

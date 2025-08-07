@@ -29,6 +29,9 @@ export class User {
   @Prop()
   passwordResetExpires: Date;
 
+  @Prop()
+  avatarUrl?: string;
+
   @Prop({ default: 'user' })
   role: string;
 

@@ -75,4 +75,12 @@ export class UserService {
 
     return user;
   }
+
+  async updateAvatar(userId: string, avatarUrl: string): Promise<void> {
+    await this.userModel.findByIdAndUpdate(
+      userId,
+      { avatarUrl },
+      { new: true }, // trả về bản ghi đã cập nhật
+    );
+  }
 }
