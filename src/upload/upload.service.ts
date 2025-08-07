@@ -1,5 +1,5 @@
+import { PostService } from './../post/post.service';
 import { UserService } from './../user/user.service';
-import { UploadApiResponse } from 'cloudinary';
 import { CloudinaryService } from './cloudinary/cloudinary.service';
 import { Injectable } from '@nestjs/common';
 
@@ -8,6 +8,7 @@ export class UploadService {
   constructor(
     private cloudinaryService: CloudinaryService,
     private userService: UserService,
+    private postService: PostService,
   ) {}
   async uploadUserAvatar(
     userId: string,
@@ -27,10 +28,13 @@ export class UploadService {
     };
   }
 
-  uploadPostImage(
-    postId: string,
-    file: Express.Multer.File,
-  ): Promise<UploadApiResponse> {
-    return this.cloudinaryService.uploadImage(file, 'post', postId);
+  async uploadPostImages(files: Express.Multer.File[]): Promise<string[]> {
+    const uploadPromises = files.map((file) =>
+      this.cloudinaryService.uploadImage(file, 'post'),
+    );
+
+    const results = await Promise.all(uploadPromises);
+
+    return results.map((res) => res.secure_url);
   }
 }

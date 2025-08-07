@@ -1,4 +1,4 @@
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { UploadService } from './upload.service';
 import {
   BadRequestException,
@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   UploadedFile,
+  UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -27,13 +28,11 @@ export class UploadController {
   }
 
   @Post('post/:postId')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FilesInterceptor('file'))
   @UseGuards(JwtAuthGuard)
-  async uploadPostImage(
-    @Param('postId') postId: string,
-    @UploadedFile() file: Express.Multer.File,
-  ) {
-    if (!file) throw new BadRequestException('No file uploaded');
-    return this.uploadService.uploadPostImage(postId, file);
+  uploadPostImage(@UploadedFiles() files: Express.Multer.File[]) {
+    if (!files || files.length === 0)
+      throw new BadRequestException('No file uploaded');
+    return this.uploadService.uploadPostImages(files);
   }
 }

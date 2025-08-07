@@ -14,7 +14,7 @@ export class CloudinaryService {
   async uploadImage(
     file: Express.Multer.File,
     type: 'avatar' | 'post',
-    id: string, // userId or postId
+    id?: string, // userId or postId
   ): Promise<UploadApiResponse> {
     const folder = getUploadFolder(type, id);
 
@@ -29,6 +29,7 @@ export class CloudinaryService {
         },
       );
 
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
       Readable.from(file.buffer as Buffer).pipe(stream);
     });
   }
