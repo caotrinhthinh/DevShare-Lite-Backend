@@ -210,6 +210,10 @@ export class AuthService {
       throw new BadRequestException('Invalid or expired reset token');
     }
 
+    if (user.passwordResetExpires && user.passwordResetExpires < new Date()) {
+      throw new BadRequestException('Reset token has expired');
+    }
+
     // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 

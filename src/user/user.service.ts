@@ -33,7 +33,7 @@ export class UserService {
   }
 
   async findByPasswordResetToken(resetToken: string) {
-    return this.userModel.findOne({ passwordResetToken: resetToken }).explain(); // có trả về "IXSCAN" => đang dùng index
+    return this.userModel.findOne({ passwordResetToken: resetToken }).exec(); // có trả về "IXSCAN" => đang dùng index
   }
 
   async update(id: string, updateData: any): Promise<UserDocument | null> {
