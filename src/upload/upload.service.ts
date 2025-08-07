@@ -9,18 +9,22 @@ export class UploadService {
     private cloudinaryService: CloudinaryService,
     private userService: UserService,
   ) {}
-
   async uploadUserAvatar(
     userId: string,
     file: Express.Multer.File,
-  ): Promise<UploadApiResponse> {
-    const resutl = await this.cloudinaryService.uploadImage(
+  ): Promise<{ message: string; avatarUrl: string }> {
+    const { secure_url: avatarUrl } = await this.cloudinaryService.uploadImage(
       file,
       'avatar',
       userId,
     );
-    await this.userService.updateAvatar(userId, resutl.secure_url);
-    return resutl;
+
+    await this.userService.updateAvatar(userId, avatarUrl);
+
+    return {
+      message: 'Avatar updated successfully',
+      avatarUrl,
+    };
   }
 
   uploadPostImage(

@@ -161,4 +161,10 @@ export class PostService {
       .sort({ createdAt: -1 })
       .exec();
   }
+
+  async addImages(postId: string, imageUrls: string[]): Promise<void> {
+    await this.postModel.findByIdAndUpdate(postId, {
+      $addToSet: { images: { $each: imageUrls } }, // addToSet để tránh trùng lặp link
+    });
+  }
 }
